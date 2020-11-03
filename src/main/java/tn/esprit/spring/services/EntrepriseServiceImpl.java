@@ -1,6 +1,7 @@
 package tn.esprit.spring.services;
 
 import java.util.ArrayList;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +12,13 @@ import tn.esprit.spring.entities.Departement;
 import tn.esprit.spring.entities.Entreprise;
 import tn.esprit.spring.repository.DepartementRepository;
 import tn.esprit.spring.repository.EntrepriseRepository;
-
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 @Service
 public class EntrepriseServiceImpl implements IEntrepriseService {
+	//log4j
+	//without spring logger fi blast logManager
+	private static final Logger l = LogManager.getLogger(EntrepriseServiceImpl.class);
 
 	@Autowired
     EntrepriseRepository entrepriseRepoistory;
@@ -21,24 +26,44 @@ public class EntrepriseServiceImpl implements IEntrepriseService {
 	DepartementRepository deptRepoistory;
 	
 	public int ajouterEntreprise(Entreprise entreprise) {
-		entrepriseRepoistory.save(entreprise);
+		int id = 0 ; 
+		try{
+			l.info("Entreprise : " + entreprise);
+			entrepriseRepoistory.save(entreprise);
+			id = entreprise.getId();
+			l.info("ajouterEntreprise() : " + id);
+		}catch (Exception e) {l.error("Erreur : " + e);}
+		
 		return entreprise.getId();
 	}
 
 	public int ajouterDepartement(Departement dep) {
-		deptRepoistory.save(dep);
+		int id = 0 ; 
+		try {
+			l.info("Departement +++ : " + dep);
+			deptRepoistory.save(dep);
+			l.info("ajouterDepartement() : " + id);
+		}catch (Exception e) {l.error("Erreur : " + e);}
+		
+		
 		return dep.getId();
 	}
 	
 	public void affecterDepartementAEntreprise(int depId, int entrepriseId) {
-		//Le bout Master de cette relation N:1 est departement  
-				//donc il faut rajouter l'entreprise a departement 
-				// ==> c'est l'objet departement(le master) qui va mettre a jour l'association
-				//Rappel : la classe qui contient mappedBy represente le bout Slave
-				//Rappel : Dans une relation oneToMany le mappedBy doit etre du cote one.
+		// Le bout Master de cette relation N:1 est departement
+				// donc il faut rajouter l'entreprise a departement
+				// ==> c'est l'objet departement(le master) qui va mettre a jour
+				// l'association
+				// Rappel : la classe qui contient mappedBy represente le bout Slave
+				// Rappel : Dans une relation oneToMany le mappedBy doit etre du cote
+				// one.
+				l.info("in departement id = " + depId);
+				l.info("in entreprise id = " + entrepriseId);
 				Entreprise entrepriseManagedEntity = entrepriseRepoistory.findById(entrepriseId).get();
+				l.info("entrepriseManagedEntity : " + entrepriseManagedEntity);
 				Departement depManagedEntity = deptRepoistory.findById(depId).get();
-				
+				l.info("depManagedEntity : " + depManagedEntity);
+
 				depManagedEntity.setEntreprise(entrepriseManagedEntity);
 				deptRepoistory.save(depManagedEntity);
 		
@@ -47,26 +72,43 @@ public class EntrepriseServiceImpl implements IEntrepriseService {
 	public List<String> getAllDepartementsNamesByEntreprise(int entrepriseId) {
 		Entreprise entrepriseManagedEntity = entrepriseRepoistory.findById(entrepriseId).get();
 		List<String> depNames = new ArrayList<>();
-		for(Departement dep : entrepriseManagedEntity.getDepartements()){
+		for (Departement dep : entrepriseManagedEntity.getDepartements()) {
 			depNames.add(dep.getName());
+			l.info("depNames : " + depNames);
 		}
-		
+
 		return depNames;
 	}
 
 	@Transactional
 	public void deleteEntrepriseById(int entrepriseId) {
-		entrepriseRepoistory.delete(entrepriseRepoistory.findById(entrepriseId).get());	
+		
+		try {
+			l.info("deleteEntrepriseById : " + entrepriseId);
+			entrepriseRepoistory.delete(entrepriseRepoistory.findById(entrepriseId).get());
+		}catch (Exception e) {l.error("Erreur : " + e);}
 	}
 
 	@Transactional
 	public void deleteDepartementById(int depId) {
-		deptRepoistory.delete(deptRepoistory.findById(depId).get());	
+		try {
+			l.info("deleteDepartementById : " + depId);
+			deptRepoistory.delete(deptRepoistory.findById(depId).get());
+			}catch (Exception e) {l.error("Erreur : " + e);}
 	}
 
 
 	public Entreprise getEntrepriseById(int entrepriseId) {
-		return entrepriseRepoistory.findById(entrepriseId).get();	
+		Entreprise entreprise = null;
+		try {
+			l.info("In getEntrepriseById(" + entrepriseId + ")");
+			entreprise = entrepriseRepoistory.findById(entrepriseId).get();
+			l.info("Out getEntrepriseById() : " + entreprise);
+		} catch (Exception e) {
+			l.error("Erreur : " + e);
+		}
+
+		return entreprise;
 	}
 
 }
